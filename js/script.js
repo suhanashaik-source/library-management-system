@@ -66,12 +66,52 @@
     },
     {
       id: 'BK-104',
+      title: 'Python Crash Course',
+      author: 'Eric Matthes',
+      category: 'Programming',
+      totalQty: 1,
+      availableQty: 1,
+      coverUrl: 'assets/covers/python-crash-course.svg',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'BK-105',
       title: 'The Alchemist',
       author: 'Paulo Coelho',
       category: 'Fiction',
       totalQty: 4,
       availableQty: 4,
       coverUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'BK-124',
+      title: 'Artificial Intelligence: A Modern Approach',
+      author: 'Stuart Russell & Peter Norvig',
+      category: 'Artificial Intelligence',
+      totalQty: 1,
+      availableQty: 1,
+      coverUrl: 'assets/covers/aima.svg',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'BK-128',
+      title: 'AI Superpowers',
+      author: 'Kai-Fu Lee',
+      category: 'Artificial Intelligence',
+      totalQty: 1,
+      availableQty: 1,
+      coverUrl: 'assets/covers/ai-superpowers.svg',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'BK-126',
+      title: 'Machine Learning',
+      author: 'Tom M. Mitchell',
+      category: 'Machine Learning',
+      totalQty: 1,
+      availableQty: 1,
+      coverUrl: 'assets/covers/machine-learning.svg',
       createdAt: new Date().toISOString()
     }
   ];
@@ -191,6 +231,8 @@
   // --------------------------------------------------------------------------
   // 2. DATABASE REPOSITORY / LOCALSTORAGE MANAGER
   // --------------------------------------------------------------------------
+  const CATALOG_SYNC_FLAG = 'library_lms_books_sync_v4_1';
+
   class Database {
     constructor() {
       this.initDatabase();
@@ -199,6 +241,10 @@
     initDatabase() {
       if (!localStorage.getItem(STORAGE_KEYS.BOOKS)) {
         this.saveBooks(DEFAULT_BOOKS);
+        localStorage.setItem(CATALOG_SYNC_FLAG, '1');
+      } else if (!localStorage.getItem(CATALOG_SYNC_FLAG)) {
+        this.syncCatalogAdditions();
+        localStorage.setItem(CATALOG_SYNC_FLAG, '1');
       }
       if (!localStorage.getItem(STORAGE_KEYS.STUDENTS)) {
         this.saveStudents(DEFAULT_STUDENTS);
@@ -214,12 +260,51 @@
       }
     }
 
+    syncCatalogAdditions() {
+      const books = this.getBooks();
+      let changed = false;
+
+      const requestedIds = ['BK-104', 'BK-124', 'BK-128', 'BK-126'];
+      const bk104Index = books.findIndex(b => (b.id || '').toLowerCase() === 'bk-104');
+      if (bk104Index !== -1 && books[bk104Index].title === 'The Alchemist') {
+        const hasBk105 = books.some(b => (b.id || '').toLowerCase() === 'bk-105');
+        if (!hasBk105) {
+          books[bk104Index] = { ...books[bk104Index], id: 'BK-105' };
+          const issues = this.getIssues();
+          let issueChanged = false;
+          issues.forEach(iss => {
+            if (iss.bookId === 'BK-104') {
+              iss.bookId = 'BK-105';
+              issueChanged = true;
+            }
+          });
+          if (issueChanged) this.saveIssues(issues);
+          changed = true;
+        }
+      }
+
+      requestedIds.forEach(reqId => {
+        const seedBook = DEFAULT_BOOKS.find(b => b.id === reqId);
+        if (!seedBook) return;
+        const exists = books.some(b => (b.id || '').toLowerCase() === reqId.toLowerCase());
+        if (!exists) {
+          books.push({ ...seedBook, createdAt: new Date().toISOString() });
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        this.saveBooks(books);
+      }
+    }
+
     resetToDemoData() {
       localStorage.setItem(STORAGE_KEYS.BOOKS, JSON.stringify(DEFAULT_BOOKS));
       localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(DEFAULT_STUDENTS));
       localStorage.setItem(STORAGE_KEYS.ISSUES, JSON.stringify(DEFAULT_ISSUES));
       localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(DEFAULT_ACTIVITIES));
       localStorage.setItem(STORAGE_KEYS.ADMIN_PWD, 'Library@123');
+      localStorage.setItem(CATALOG_SYNC_FLAG, '1');
     }
 
     getAdminPassword() {
@@ -492,7 +577,21 @@
     // Issue Books Module & Preview
     issueBookForm: document.getElementById('issueBookForm'),
     issueStudentSelect: document.getElementById('issueStudentSelect'),
+    issueStudentCombobox: document.getElementById('issueStudentCombobox'),
+    issueStudentTrigger: document.getElementById('issueStudentTrigger'),
+    issueStudentTriggerText: document.getElementById('issueStudentTriggerText'),
+    issueStudentDropdown: document.getElementById('issueStudentDropdown'),
+    issueStudentSearchInput: document.getElementById('issueStudentSearchInput'),
+    issueStudentSearchClear: document.getElementById('issueStudentSearchClear'),
+    issueStudentOptionsList: document.getElementById('issueStudentOptionsList'),
     issueBookSelect: document.getElementById('issueBookSelect'),
+    issueBookCombobox: document.getElementById('issueBookCombobox'),
+    issueBookTrigger: document.getElementById('issueBookTrigger'),
+    issueBookTriggerText: document.getElementById('issueBookTriggerText'),
+    issueBookDropdown: document.getElementById('issueBookDropdown'),
+    issueBookSearchInput: document.getElementById('issueBookSearchInput'),
+    issueBookSearchClear: document.getElementById('issueBookSearchClear'),
+    issueBookOptionsList: document.getElementById('issueBookOptionsList'),
     issueBookPreviewBox: document.getElementById('issueBookPreviewBox'),
     issueBookPreviewImg: document.getElementById('issueBookPreviewImg'),
     issueBookPreviewTitle: document.getElementById('issueBookPreviewTitle'),
@@ -618,9 +717,12 @@
     if (modalEl) modalEl.classList.add('d-none');
   }
 
-  function promptConfirmation(title, message, onProceed) {
+  function promptConfirmation(title, message, onProceed, proceedLabel = 'Confirm') {
     DOM.confirmModalTitle.textContent = title;
     DOM.confirmModalMessage.textContent = message;
+    if (DOM.confirmModalProceedBtn) {
+      DOM.confirmModalProceedBtn.textContent = proceedLabel;
+    }
     state.pendingConfirmAction = onProceed;
     openModal(DOM.confirmModal);
   }
@@ -729,6 +831,7 @@
     if (DOM.studentUserDropdownMenu) DOM.studentUserDropdownMenu.classList.remove('show');
     if (DOM.studentUserDropdownBtn) DOM.studentUserDropdownBtn.classList.remove('open');
     if (DOM.dbSettingsMenu) DOM.dbSettingsMenu.classList.remove('show');
+    closeSearchableIssueDropdowns();
   }
 
   // --------------------------------------------------------------------------
@@ -1241,6 +1344,22 @@
           <td>
             <div class="cell-title">${escapeHTML(student.name)}</div>
             <div class="cell-sub">${escapeHTML(student.email)}</div>
+            <div class="student-inline-actions">
+              <button type="button" class="btn-table-action btn-table-action-labeled btn-update-student action-edit-student" data-roll="${escapeHTML(student.rollNumber)}" title="Update student">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span>Update</span>
+              </button>
+              <button type="button" class="btn-table-action btn-table-action-labeled btn-remove-student action-delete action-delete-student" data-roll="${escapeHTML(student.rollNumber)}" title="Delete student">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span>Delete</span>
+              </button>
+            </div>
           </td>
           <td><code>${escapeHTML(student.rollNumber)}</code></td>
           <td>${escapeHTML(student.department)}</td>
@@ -1256,22 +1375,6 @@
             </div>
           </td>
           <td>${escapeHTML(student.phone)}</td>
-          <td class="text-right">
-            <div class="table-actions">
-              <button class="btn-table-action action-edit-student" data-roll="${escapeHTML(student.rollNumber)}" title="Edit student">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-              </button>
-              <button class="btn-table-action action-delete action-delete-student" data-roll="${escapeHTML(student.rollNumber)}" title="Delete student">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-              </button>
-            </div>
-          </td>
         </tr>
       `;
     }).join('');
@@ -1358,6 +1461,7 @@
     DOM.registerStudentForm.reset();
 
     renderStudents();
+    populateIssueDropdowns();
     updateDashboard();
   }
 
@@ -1399,6 +1503,12 @@
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showToast('Validation Error', 'Please enter a valid email address.', 'error');
+      return;
+    }
+
     const students = db.getStudents();
 
     if (newRoll.toLowerCase() !== originalRoll.toLowerCase()) {
@@ -1411,6 +1521,8 @@
 
     const index = students.findIndex(s => s.rollNumber === originalRoll);
     if (index === -1) return;
+
+    const previousName = students[index].name;
 
     students[index] = {
       ...students[index],
@@ -1425,7 +1537,7 @@
 
     db.saveStudents(students);
 
-    if (newRoll !== originalRoll || name !== students[index].name) {
+    if (newRoll !== originalRoll || name !== previousName) {
       const issues = db.getIssues();
       let issueUpdated = false;
       issues.forEach(iss => {
@@ -1438,41 +1550,392 @@
       if (issueUpdated) db.saveIssues(issues);
     }
 
+    db.addActivity('update', name, `Updated profile (${newRoll})`, 'Updated');
     closeModal(DOM.editStudentModal);
     showToast('Student Updated', `${name}'s profile was updated.`);
     renderStudents();
+    populateIssueDropdowns();
+    renderReturns();
+    renderHistory();
     updateDashboard();
   }
 
   function confirmDeleteStudent(rollNumber) {
     const students = db.getStudents();
-    const student = students.find(s => s.rollNumber === rollNumber);
+    const student = students.find(s => (s.rollNumber || '').toLowerCase() === String(rollNumber || '').toLowerCase());
     if (!student) return;
 
     const issues = db.getIssues();
-    const hasActiveIssues = issues.some(i => i.studentRoll === rollNumber && i.status === 'Issued');
-    if (hasActiveIssues) {
-      showToast('Cannot Delete', `${student.name} currently has books issued.`, 'warning');
-      return;
+    const activeIssues = issues.filter(
+      i => (i.studentRoll || '').toLowerCase() === student.rollNumber.toLowerCase() && i.status === 'Issued'
+    );
+
+    let confirmMessage = `Are you sure you want to delete ${student.name} (${student.rollNumber}) from registered students?`;
+    if (activeIssues.length > 0) {
+      const activeTitles = activeIssues.map(i => `"${i.bookTitle}"`).join(', ');
+      confirmMessage = `${student.name} (${student.rollNumber}) currently has ${activeIssues.length} active issued book(s) (${activeTitles}). Deleting this student will mark those book(s) as returned and restore shelf stock. Continue?`;
     }
 
     promptConfirmation(
       'Delete Student',
-      `Are you sure you want to delete ${student.name} (${student.rollNumber})?`,
+      confirmMessage,
       () => {
-        const updatedStudents = students.filter(s => s.rollNumber !== rollNumber);
+        const latestIssues = db.getIssues();
+        const latestBooks = db.getBooks();
+        const todayStr = formatDateYYYYMMDD(new Date());
+        let issuesChanged = false;
+        let booksChanged = false;
+
+        latestIssues.forEach(iss => {
+          if ((iss.studentRoll || '').toLowerCase() === student.rollNumber.toLowerCase() && iss.status === 'Issued') {
+            iss.status = 'Returned';
+            iss.returnDate = todayStr;
+            issuesChanged = true;
+
+            const bookIdx = latestBooks.findIndex(b => b.id === iss.bookId);
+            if (bookIdx !== -1) {
+              const avail = parseInt(latestBooks[bookIdx].availableQty, 10) || 0;
+              const total = parseInt(latestBooks[bookIdx].totalQty, 10) || 0;
+              latestBooks[bookIdx].availableQty = Math.min(avail + 1, total);
+              booksChanged = true;
+            }
+          }
+        });
+
+        if (issuesChanged) db.saveIssues(latestIssues);
+        if (booksChanged) db.saveBooks(latestBooks);
+
+        const updatedStudents = db.getStudents().filter(
+          s => (s.rollNumber || '').toLowerCase() !== student.rollNumber.toLowerCase()
+        );
         db.saveStudents(updatedStudents);
-        db.addActivity('delete', student.name, `Membership removed (${rollNumber})`, 'Deleted');
-        showToast('Student Deleted', `${student.name} was removed.`);
+        db.addActivity('delete', student.name, `Membership deleted (${student.rollNumber})`, 'Deleted');
+        showToast('Student Deleted', `${student.name} (${student.rollNumber}) was deleted.`);
+
         renderStudents();
+        renderBooks();
+        populateIssueDropdowns();
+        renderReturns();
+        renderHistory();
         updateDashboard();
-      }
+      },
+      'Delete Student'
     );
   }
 
   // --------------------------------------------------------------------------
   // 9. ISSUE BOOKS MODULE & LIVE PREVIEW
   // --------------------------------------------------------------------------
+  function closeSearchableIssueDropdowns(exceptDropdown = null) {
+    const pairs = [
+      { dropdown: DOM.issueStudentDropdown, trigger: DOM.issueStudentTrigger },
+      { dropdown: DOM.issueBookDropdown, trigger: DOM.issueBookTrigger }
+    ];
+    pairs.forEach(({ dropdown, trigger }) => {
+      if (dropdown && dropdown !== exceptDropdown) {
+        dropdown.classList.add('d-none');
+      }
+      if (trigger && (!exceptDropdown || dropdown !== exceptDropdown)) {
+        trigger.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  function syncIssueStudentTrigger(rollValue) {
+    if (!DOM.issueStudentTrigger || !DOM.issueStudentTriggerText) return;
+    if (!rollValue) {
+      DOM.issueStudentTriggerText.textContent = 'Choose a student';
+      DOM.issueStudentTrigger.classList.add('is-placeholder');
+      return;
+    }
+    const students = db.getStudents();
+    const student = students.find(s => s.rollNumber === rollValue);
+    if (student) {
+      DOM.issueStudentTriggerText.textContent = `${student.name} (${student.rollNumber} • ${student.department})`;
+      DOM.issueStudentTrigger.classList.remove('is-placeholder');
+    } else {
+      DOM.issueStudentTriggerText.textContent = 'Choose a student';
+      DOM.issueStudentTrigger.classList.add('is-placeholder');
+    }
+  }
+
+  function syncIssueBookTrigger(bookId) {
+    if (!DOM.issueBookTrigger || !DOM.issueBookTriggerText) return;
+    if (!bookId) {
+      DOM.issueBookTriggerText.textContent = 'Choose an available book';
+      DOM.issueBookTrigger.classList.add('is-placeholder');
+      return;
+    }
+    const books = db.getBooks();
+    const book = books.find(b => b.id === bookId);
+    const avail = book ? (parseInt(book.availableQty, 10) || 0) : 0;
+    if (book && avail > 0) {
+      DOM.issueBookTriggerText.textContent = `${book.title} (ID: ${book.id} • Available: ${avail})`;
+      DOM.issueBookTrigger.classList.remove('is-placeholder');
+    } else {
+      DOM.issueBookTriggerText.textContent = 'Choose an available book';
+      DOM.issueBookTrigger.classList.add('is-placeholder');
+    }
+  }
+
+  function updateIssueBookPreview(bookId) {
+    if (!bookId) {
+      DOM.issueBookPreviewBox.classList.add('d-none');
+      return;
+    }
+    const books = db.getBooks();
+    const book = books.find(b => b.id === bookId);
+    if (book) {
+      DOM.issueBookPreviewBox.classList.remove('d-none');
+      DOM.issueBookPreviewImg.src = book.coverUrl || DEFAULT_COVER_PLACEHOLDER;
+      DOM.issueBookPreviewTitle.textContent = book.title;
+      DOM.issueBookPreviewAuthor.textContent = `by ${book.author} (${book.category})`;
+      DOM.issueBookPreviewStock.textContent = `${book.availableQty} copies available`;
+    } else {
+      DOM.issueBookPreviewBox.classList.add('d-none');
+    }
+  }
+
+  function renderIssueStudentOptions(query = '') {
+    if (!DOM.issueStudentOptionsList) return;
+    const students = db.getStudents();
+    const q = String(query || '').trim().toLowerCase();
+    const currentVal = DOM.issueStudentSelect.value;
+
+    const filtered = students.filter(s => {
+      if (!q) return true;
+      return (
+        (s.name && s.name.toLowerCase().includes(q)) ||
+        (s.rollNumber && s.rollNumber.toLowerCase().includes(q)) ||
+        (s.department && s.department.toLowerCase().includes(q)) ||
+        (s.email && s.email.toLowerCase().includes(q)) ||
+        (s.phone && s.phone.toLowerCase().includes(q))
+      );
+    });
+
+    let html = '';
+    if (!q && currentVal) {
+      html += `
+        <button type="button" class="searchable-option searchable-option-clear" data-roll="">
+          <span>Clear selection (Choose a student)</span>
+        </button>
+      `;
+    }
+
+    if (filtered.length === 0) {
+      html += `<div class="searchable-select-empty">No matching students found.</div>`;
+    } else {
+      html += filtered.map(s => {
+        const isActive = s.rollNumber === currentVal;
+        return `
+          <button type="button" class="searchable-option ${isActive ? 'active' : ''}" data-roll="${escapeHTML(s.rollNumber)}" role="option" aria-selected="${isActive ? 'true' : 'false'}">
+            <span class="searchable-option-main">
+              <span class="searchable-option-title">${escapeHTML(s.name)}</span>
+              <span class="searchable-option-sub">${escapeHTML(s.rollNumber)} • ${escapeHTML(s.department)}</span>
+            </span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    DOM.issueStudentOptionsList.innerHTML = html;
+    DOM.issueStudentOptionsList.querySelectorAll('.searchable-option').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const roll = btn.getAttribute('data-roll') || '';
+        selectIssueStudent(roll);
+      });
+    });
+  }
+
+  function renderIssueBookOptions(query = '') {
+    if (!DOM.issueBookOptionsList) return;
+    const books = db.getBooks();
+    const q = String(query || '').trim().toLowerCase();
+    const currentVal = DOM.issueBookSelect.value;
+
+    const filtered = books.filter(b => {
+      if (!q) return true;
+      return (
+        (b.title && b.title.toLowerCase().includes(q)) ||
+        (b.id && b.id.toLowerCase().includes(q)) ||
+        (b.author && b.author.toLowerCase().includes(q)) ||
+        (b.category && b.category.toLowerCase().includes(q))
+      );
+    });
+
+    let html = '';
+    if (!q && currentVal) {
+      html += `
+        <button type="button" class="searchable-option searchable-option-clear" data-id="">
+          <span>Clear selection (Choose an available book)</span>
+        </button>
+      `;
+    }
+
+    if (filtered.length === 0) {
+      html += `<div class="searchable-select-empty">No matching books found.</div>`;
+    } else {
+      html += filtered.map(b => {
+        const avail = parseInt(b.availableQty, 10) || 0;
+        const isAvailable = avail > 0;
+        const isActive = isAvailable && b.id === currentVal;
+        return `
+          <button type="button" class="searchable-option ${isActive ? 'active' : ''} ${!isAvailable ? 'is-disabled' : ''}" data-id="${escapeHTML(b.id)}" role="option" aria-selected="${isActive ? 'true' : 'false'}" ${!isAvailable ? 'disabled' : ''}>
+            <span class="searchable-option-main">
+              <span class="searchable-option-title">${escapeHTML(b.title)}</span>
+              <span class="searchable-option-sub">ID: ${escapeHTML(b.id)} • ${escapeHTML(b.author)} • ${escapeHTML(b.category)}</span>
+            </span>
+            <span class="searchable-option-badge ${!isAvailable ? 'out-stock' : ''}">${isAvailable ? `${avail} avail` : 'Out of stock'}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    DOM.issueBookOptionsList.innerHTML = html;
+    DOM.issueBookOptionsList.querySelectorAll('.searchable-option').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (btn.disabled) return;
+        const bookId = btn.getAttribute('data-id') || '';
+        selectIssueBook(bookId);
+      });
+    });
+  }
+
+  function selectIssueStudent(rollNumber) {
+    DOM.issueStudentSelect.value = rollNumber;
+    syncIssueStudentTrigger(rollNumber);
+    closeSearchableIssueDropdowns();
+    if (DOM.issueStudentTrigger) DOM.issueStudentTrigger.focus();
+  }
+
+  function selectIssueBook(bookId) {
+    DOM.issueBookSelect.value = bookId;
+    syncIssueBookTrigger(bookId);
+    updateIssueBookPreview(bookId);
+    closeSearchableIssueDropdowns();
+    if (DOM.issueBookTrigger) DOM.issueBookTrigger.focus();
+  }
+
+  function bindSearchableIssueCombobox({ combobox, trigger, dropdown, searchInput, clearBtn, optionsList, renderOptions }) {
+    if (!combobox || !trigger || !dropdown || !searchInput || !optionsList) return;
+
+    combobox.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = !dropdown.classList.contains('d-none');
+      closeAllDropdowns();
+      if (!isOpen) {
+        searchInput.value = '';
+        if (clearBtn) clearBtn.classList.add('d-none');
+        renderOptions('');
+        dropdown.classList.remove('d-none');
+        trigger.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+        setTimeout(() => searchInput.focus(), 10);
+      }
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (clearBtn) {
+        if (val) {
+          clearBtn.classList.remove('d-none');
+        } else {
+          clearBtn.classList.add('d-none');
+        }
+      }
+      renderOptions(val);
+    });
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        searchInput.value = '';
+        clearBtn.classList.add('d-none');
+        renderOptions('');
+        searchInput.focus();
+      });
+    }
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeSearchableIssueDropdowns();
+        trigger.focus();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const options = optionsList.querySelectorAll('.searchable-option');
+        const firstMatch = Array.from(options).find(opt => !opt.disabled && !opt.classList.contains('searchable-option-clear'));
+        if (firstMatch) firstMatch.click();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const options = optionsList.querySelectorAll('.searchable-option');
+        const firstEnabled = Array.from(options).find(opt => !opt.disabled);
+        if (firstEnabled) firstEnabled.focus();
+      }
+    });
+
+    optionsList.addEventListener('keydown', (e) => {
+      const enabled = Array.from(optionsList.querySelectorAll('.searchable-option')).filter(opt => !opt.disabled);
+      const currentIdx = enabled.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = enabled[currentIdx + 1] || enabled[0];
+        if (next) next.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentIdx <= 0) {
+          searchInput.focus();
+        } else {
+          enabled[currentIdx - 1].focus();
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeSearchableIssueDropdowns();
+        trigger.focus();
+      }
+    });
+  }
+
+  function setupSearchableIssueDropdowns() {
+    bindSearchableIssueCombobox({
+      combobox: DOM.issueStudentCombobox,
+      trigger: DOM.issueStudentTrigger,
+      dropdown: DOM.issueStudentDropdown,
+      searchInput: DOM.issueStudentSearchInput,
+      clearBtn: DOM.issueStudentSearchClear,
+      optionsList: DOM.issueStudentOptionsList,
+      renderOptions: renderIssueStudentOptions
+    });
+
+    bindSearchableIssueCombobox({
+      combobox: DOM.issueBookCombobox,
+      trigger: DOM.issueBookTrigger,
+      dropdown: DOM.issueBookDropdown,
+      searchInput: DOM.issueBookSearchInput,
+      clearBtn: DOM.issueBookSearchClear,
+      optionsList: DOM.issueBookOptionsList,
+      renderOptions: renderIssueBookOptions
+    });
+
+    if (DOM.issueBookForm) {
+      DOM.issueBookForm.addEventListener('reset', () => {
+        setTimeout(() => {
+          syncIssueStudentTrigger('');
+          syncIssueBookTrigger('');
+          updateIssueBookPreview('');
+          closeSearchableIssueDropdowns();
+        }, 0);
+      });
+    }
+  }
+
   function populateIssueDropdowns() {
     const students = db.getStudents();
     const books = db.getBooks();
@@ -1482,6 +1945,7 @@
       studentOptions += `<option value="${escapeHTML(s.rollNumber)}">${escapeHTML(s.name)} (${escapeHTML(s.rollNumber)} • ${escapeHTML(s.department)})</option>`;
     });
     DOM.issueStudentSelect.innerHTML = studentOptions;
+    DOM.issueStudentSelect.value = '';
 
     let bookOptions = `<option value="">Choose an available book</option>`;
     books.forEach(b => {
@@ -1493,6 +1957,19 @@
       }
     });
     DOM.issueBookSelect.innerHTML = bookOptions;
+    DOM.issueBookSelect.value = '';
+
+    if (DOM.issueStudentSearchInput) DOM.issueStudentSearchInput.value = '';
+    if (DOM.issueStudentSearchClear) DOM.issueStudentSearchClear.classList.add('d-none');
+    if (DOM.issueBookSearchInput) DOM.issueBookSearchInput.value = '';
+    if (DOM.issueBookSearchClear) DOM.issueBookSearchClear.classList.add('d-none');
+
+    syncIssueStudentTrigger('');
+    syncIssueBookTrigger('');
+    renderIssueStudentOptions('');
+    renderIssueBookOptions('');
+    updateIssueBookPreview('');
+    closeSearchableIssueDropdowns();
 
     DOM.issueDateInput.value = formatDateYYYYMMDD(new Date());
     DOM.dueDateInput.value = getOffsetDate(14);
@@ -1511,21 +1988,11 @@
   function setupBookSelectPreview() {
     DOM.issueBookSelect.addEventListener('change', (e) => {
       const bookId = e.target.value;
-      if (!bookId) {
-        DOM.issueBookPreviewBox.classList.add('d-none');
-        return;
-      }
-      const books = db.getBooks();
-      const book = books.find(b => b.id === bookId);
-      if (book) {
-        DOM.issueBookPreviewBox.classList.remove('d-none');
-        DOM.issueBookPreviewImg.src = book.coverUrl || DEFAULT_COVER_PLACEHOLDER;
-        DOM.issueBookPreviewTitle.textContent = book.title;
-        DOM.issueBookPreviewAuthor.textContent = `by ${book.author} (${book.category})`;
-        DOM.issueBookPreviewStock.textContent = `${book.availableQty} copies available`;
-      } else {
-        DOM.issueBookPreviewBox.classList.add('d-none');
-      }
+      syncIssueBookTrigger(bookId);
+      updateIssueBookPreview(bookId);
+    });
+    DOM.issueStudentSelect.addEventListener('change', (e) => {
+      syncIssueStudentTrigger(e.target.value);
     });
   }
 
@@ -1592,6 +2059,8 @@
 
     if (!studentRoll || !bookId || !issueDate || !dueDate) {
       showToast('Incomplete', 'Please fill all checkout fields.', 'error');
+      if (!studentRoll && DOM.issueStudentTrigger) DOM.issueStudentTrigger.focus();
+      else if (!bookId && DOM.issueBookTrigger) DOM.issueBookTrigger.focus();
       return;
     }
 
@@ -2390,7 +2859,7 @@
 
     DOM.qaIssueBook.addEventListener('click', () => {
       switchView('issue');
-      setTimeout(() => DOM.issueStudentSelect.focus(), 150);
+      setTimeout(() => (DOM.issueStudentTrigger || DOM.issueStudentSelect).focus(), 150);
     });
 
     DOM.qaReturnBook.addEventListener('click', () => {
@@ -2412,6 +2881,7 @@
     // Manage Books Form, Cover Upload, Filters
     setupCoverUploadHandlers();
     setupBookSelectPreview();
+    setupSearchableIssueDropdowns();
     DOM.addBookForm.addEventListener('submit', handleAddBook);
     DOM.searchBooksInput.addEventListener('input', (e) => {
       state.bookSearchQuery = e.target.value;

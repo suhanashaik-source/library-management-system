@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 440" width="320" height="440">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="440" rx="10" fill="url(#bgGrad)"/>
+  <rect x="0" y="0" width="14" height="440" fill="#eab308"/>
+  <rect x="26" y="24" width="270" height="392" rx="6" fill="none" stroke="rgba(250,204,21,0.28)" stroke-width="1.5"/>
+
+  <rect x="42" y="42" width="110" height="24" rx="12" fill="rgba(250,204,21,0.16)" stroke="#facc15" stroke-width="1"/>
+  <text x="97" y="58" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#facc15" letter-spacing="1.2">PROGRAMMING</text>
+
+  <!-- Stylized Python Emblem -->
+  <g transform="translate(160, 140)">
+    <circle cx="0" cy="0" r="48" fill="rgba(56,189,248,0.12)" stroke="rgba(56,189,248,0.35)" stroke-width="1.5"/>
+    <path d="M-2 -30 C-18 -30 -18 -14 -18 -14 L-18 -4 L4 -4 L4 0 L-22 0 C-22 0 -30 -1 -30 14 C-30 29 -20 28 -20 28 L-12 28 L-12 18 C-12 18 -12 8 -2 8 L14 8 C14 8 22 8 22 -2 L22 -18 C22 -18 22 -30 -2 -30 Z" fill="#38bdf8"/>
+    <path d="M2 30 C18 30 18 14 18 14 L18 4 L-4 4 L-4 0 L22 0 C22 0 30 1 30 -14 C30 -29 20 -28 20 -28 L12 -28 L12 -18 C12 -18 12 -8 2 -8 L-14 -8 C-14 -8 -22 -8 -22 2 L-22 18 C-22 18 -22 30 2 30 Z" fill="url(#goldGrad)" opacity="0.95"/>
+    <circle cx="-10" cy="-20" r="3" fill="#0f172a"/>
+    <circle cx="10" cy="20" r="3" fill="#0f172a"/>
+  </g>
+
+  <text x="42" y="238" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#ffffff">PYTHON</text>
+  <text x="42" y="274" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#facc15">CRASH</text>
+  <text x="42" y="310" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#ffffff">COURSE</text>
+
+  <line x1="42" y1="328" x2="140" y2="328" stroke="#facc15" stroke-width="3" stroke-linecap="round"/>
+  <text x="42" y="350" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#cbd5e1">A Hands-On, Project-Based</text>
+  <text x="42" y="366" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#cbd5e1">Introduction to Programming</text>
+
+  <text x="42" y="402" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#f8fafc" letter-spacing="0.5">ERIC MATTHES</text>
+  <text x="282" y="402" text-anchor="end" font-family="monospace" font-size="11" fill="#94a3b8">BK-104</text>
+</svg>

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 440" width="320" height="440">
+  <defs>
+    <linearGradient id="supBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#19382b"/>
+      <stop offset="100%" stop-color="#0b1d16"/>
+    </linearGradient>
+    <linearGradient id="orbGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="440" rx="10" fill="url(#supBg)"/>
+  <rect x="0" y="0" width="14" height="440" fill="#f97316"/>
+  <rect x="26" y="24" width="270" height="392" rx="6" fill="none" stroke="rgba(52,211,153,0.28)" stroke-width="1.5"/>
+
+  <rect x="42" y="42" width="166" height="24" rx="12" fill="rgba(249,115,22,0.18)" stroke="#fb923c" stroke-width="1"/>
+  <text x="125" y="58" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" fill="#fdba74" letter-spacing="1">ARTIFICIAL INTELLIGENCE</text>
+
+  <!-- Global AI Horizon Motif -->
+  <circle cx="165" cy="145" r="50" fill="none" stroke="rgba(52,211,153,0.45)" stroke-width="1.5"/>
+  <ellipse cx="165" cy="145" rx="50" ry="20" fill="none" stroke="rgba(52,211,153,0.45)" stroke-width="1.2"/>
+  <ellipse cx="165" cy="145" rx="22" ry="50" fill="none" stroke="rgba(52,211,153,0.45)" stroke-width="1.2"/>
+  <circle cx="165" cy="145" r="14" fill="url(#orbGrad)"/>
+  <circle cx="204" cy="126" r="5" fill="#fb923c"/>
+  <circle cx="126" cy="162" r="5" fill="#fb923c"/>
+
+  <text x="42" y="250" font-family="Georgia, 'Times New Roman', serif" font-size="36" font-weight="700" fill="#fb923c">AI</text>
+  <text x="42" y="290" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700" fill="#ffffff">SUPERPOWERS</text>
+
+  <line x1="42" y1="312" x2="140" y2="312" stroke="#34d399" stroke-width="3" stroke-linecap="round"/>
+  <text x="42" y="336" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#a7f3d0">China, Silicon Valley, and</text>
+  <text x="42" y="352" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#a7f3d0">the New World Order</text>
+
+  <text x="42" y="398" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#ffffff" letter-spacing="0.5">KAI-FU LEE</text>
+  <text x="282" y="398" text-anchor="end" font-family="monospace" font-size="11" fill="#6ee7b7">BK-128</text>
+</svg>

@@ -879,7 +879,7 @@
                       <label for="bookCategoryInput">Category <span class="required">*</span></label>
                       <input type="text" id="bookCategoryInput" class="form-control" placeholder="e.g. Programming, Fiction" list="commonCategoriesList" required>
                       <datalist id="commonCategoriesList">
-                        <option value="Programming"><option value="Fiction"><option value="Non-Fiction"><option value="Science"><option value="History"><option value="Art"><option value="Moral Values"><option value="Philosophy">
+                        <option value="Programming"><option value="Artificial Intelligence"><option value="Machine Learning"><option value="Fiction"><option value="Non-Fiction"><option value="Science"><option value="History"><option value="Art"><option value="Moral Values"><option value="Philosophy">
                       </datalist>
                     </div>
 
@@ -1063,7 +1063,6 @@
                           <th>DEPARTMENT</th>
                           <th>PASSWORD</th>
                           <th>PHONE</th>
-                          <th class="text-right">ACTIONS</th>
                         </tr>
                       </thead>
                       <tbody id="studentsTableBody"></tbody>
@@ -1104,17 +1103,43 @@
                 <div class="card-body">
                   <form id="issueBookForm" class="crud-form" novalidate>
                     <div class="form-group">
-                      <label for="issueStudentSelect">Select student <span class="required">*</span></label>
-                      <select id="issueStudentSelect" class="form-control form-select" required>
-                        <option value="">Choose a student</option>
-                      </select>
+                      <label for="issueStudentTrigger">Select student <span class="required">*</span></label>
+                      <div class="searchable-select" id="issueStudentCombobox">
+                        <select id="issueStudentSelect" class="form-control form-select searchable-select-native" required tabindex="-1" aria-hidden="true">
+                          <option value="">Choose a student</option>
+                        </select>
+                        <button type="button" id="issueStudentTrigger" class="form-control form-select searchable-select-trigger is-placeholder" aria-haspopup="listbox" aria-expanded="false" aria-controls="issueStudentDropdown">
+                          <span class="searchable-select-text" id="issueStudentTriggerText">Choose a student</span>
+                        </button>
+                        <div id="issueStudentDropdown" class="searchable-select-menu d-none" role="dialog" aria-label="Search students">
+                          <div class="searchable-select-search">
+                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="issueStudentSearchInput" class="form-control form-control-sm" placeholder="Search name, roll no, or dept..." autocomplete="off">
+                            <button type="button" id="issueStudentSearchClear" class="searchable-search-clear d-none" title="Clear search" aria-label="Clear search">&times;</button>
+                          </div>
+                          <div id="issueStudentOptionsList" class="searchable-select-options" role="listbox"></div>
+                        </div>
+                      </div>
                     </div>
 
                     <div class="form-group">
-                      <label for="issueBookSelect">Select book <span class="required">*</span></label>
-                      <select id="issueBookSelect" class="form-control form-select" required>
-                        <option value="">Choose an available book</option>
-                      </select>
+                      <label for="issueBookTrigger">Select book <span class="required">*</span></label>
+                      <div class="searchable-select" id="issueBookCombobox">
+                        <select id="issueBookSelect" class="form-control form-select searchable-select-native" required tabindex="-1" aria-hidden="true">
+                          <option value="">Choose an available book</option>
+                        </select>
+                        <button type="button" id="issueBookTrigger" class="form-control form-select searchable-select-trigger is-placeholder" aria-haspopup="listbox" aria-expanded="false" aria-controls="issueBookDropdown">
+                          <span class="searchable-select-text" id="issueBookTriggerText">Choose an available book</span>
+                        </button>
+                        <div id="issueBookDropdown" class="searchable-select-menu d-none" role="dialog" aria-label="Search books">
+                          <div class="searchable-select-search">
+                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="issueBookSearchInput" class="form-control form-control-sm" placeholder="Search title, ID, author, or category..." autocomplete="off">
+                            <button type="button" id="issueBookSearchClear" class="searchable-search-clear d-none" title="Clear search" aria-label="Clear search">&times;</button>
+                          </div>
+                          <div id="issueBookOptionsList" class="searchable-select-options" role="listbox"></div>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Book Selection Live Cover Preview Strip -->
@@ -1479,7 +1504,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 class="modal-title">Edit Student Details</h3>
+          <h3 class="modal-title">Update Student Details</h3>
           <button class="btn-close-modal" data-modal="editStudentModal" aria-label="Close modal">✕</button>
         </div>
         <div class="modal-body">
@@ -1527,7 +1552,7 @@
 
             <div class="modal-footer">
               <button type="button" class="btn btn-outline" data-modal="editStudentModal">Cancel</button>
-              <button type="submit" class="btn btn-primary">Save Changes</button>
+              <button type="submit" class="btn btn-primary">Update Student</button>
             </div>
           </form>
         </div>
